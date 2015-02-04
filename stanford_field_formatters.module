@@ -204,6 +204,26 @@ function stanford_field_formatters_ds_fields_info($entity_type) {
   return array('node' => $fields, 'bean' => $fields, 'user' => $fields);
 }
 
+/**
+ * Implements hook_ds_fields_info_alter().
+ */
+function stanford_field_formatters_ds_fields_info_alter(&$fields, $entity_type) {
+
+  // Loop through the code fields and allow an extra formatter.
+  foreach ($fields as $field => $settings) {
+    if ($settings['field_type'] == DS_FIELD_TYPE_CODE) {
+      $fields[$field]['field_type'] = DS_FIELD_TYPE_FUNCTION;
+      $fields[$field]['function'] = "stanford_field_formatters_code_field_override";
+      $fields[$field]['module'] = "stanford_field_formatters";
+      $fields[$field]['properties']['formatters']["stanford_field_formatters"] = t('Link rendered output to another field');
+      $fields[$field]['properties']['formatters']['default'] = t('Default');
+      $fields[$field]['properties']['settings']['link_field'] = array('type' => 'textfield', 'description' => t('Eg: field_link'));
+      $fields[$field]['properties']['default']['link_field'] = "";
+    }
+  }
+
+}
+
 
 /**
  * Implements hook_field_formatter_settings_form().
@@ -242,9 +262,6 @@ function stanford_field_formatters_ds_field_settings_form($field) {
 function stanford_field_formatters_ds_field_format_summary($field) {
   $view_mode = $field['view_mode'];
   $instance = array();
-  // Gather type information.
-  // $instances = field_info_instances($entity_type, $bundle);
-
  return stanford_field_formatters_field_formatter_settings_summary($field, $instance, $view_mode);
 }
 
@@ -280,6 +297,37 @@ function stanford_field_formatters_ds_field_title_wrapper($field) {
 
   return $output;
 
+}
+
+/**
+ * [stanford_field_formatters_code_field_override description]
+ * @param  [type] $field [description]
+ * @return [type]        [description]
+ */
+function stanford_field_formatters_code_field_override($field) {
+  $render = ds_render_code_field($field);
+  $render = strip_tags($render, "<img><span><b><strong><i><em>");
+  $entity = $field['entity'];
+  $link_field = !empty($field['formatter_settings']['link_field']) ? $field['formatter_settings']['link_field'] : FALSE;
+  $wrapper = !empty($field['formatter_settings']['html_tag']) ? $field['formatter_settings']['html_tag'] : FALSE;
+
+  // If not available then just return the title.
+  if (!$link_field || empty($link_field)) {
+    $output = $render;
+  }
+  // If there is not a value then return just the title.
+  elseif (empty($entity->{$link_field}[LANGUAGE_NONE][0]['url'])) {
+    $output = $render;
+  }
+  else {
+    $output = l($render, $entity->{$link_field}[LANGUAGE_NONE][0]['url'], array('html' => TRUE, 'attributes' => array('class' => array('link-title-field', 'link-field'))));
+  }
+
+  if ($wrapper) {
+    $output = "<" . $wrapper . ">" . $output . "</" . $wrapper . ">";
+  }
+
+  return $output;
 }
 
 
