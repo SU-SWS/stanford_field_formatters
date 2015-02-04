@@ -1,0 +1,318 @@
+<?php
+/**
+ * @file
+ */
+
+/**
+ * Implements hook_help().
+ */
+function stanford_field_formatters_help($path, $arg) {
+  switch ($path) {
+
+    case 'admin/help#stanford_field_formatters':
+      return '<p>' . t('Contact your site administrator') . '</p>';
+  }
+}
+
+/**
+ * Implements hook_permission().
+ */
+function stanford_field_formatters_permission() {
+  return array(
+    'administer stanford field formatter' =>  array(
+      'title' => t('Administer Stanford link field formatter'),
+      'description' => t('Apply and change settings'),
+    ),
+  );
+}
+
+
+/**
+ * Implements hook_field_formatter_info().
+ *
+ * Not included field types: 'taxonomy_term_reference', 'file', 'computed', 'date', 'datestamp', 'datetime', 'email', 'field_collection', 'geofield', 'relation_endpoint', 'link_field'
+ */
+function stanford_field_formatters_field_formatter_info() {
+  $formatters = array(
+    'stanford_link_formatter_link_to_field' => array(
+      'label' => t('Link to another field'),
+      'field types' => array('title_wrapper', 'image', 'text', 'text_long', 'text_with_summary'),
+      'settings' => array('image_style' => '', 'link_field' => '', 'html_tag' => ''),
+      'module' => 'stanford_field_formatters',
+      'description' => t('Wrap this field with a link from another field.'),
+    ),
+  );
+  return $formatters;
+}
+
+/**
+ * Implements hook_field_formatter_settings_form().
+ */
+function stanford_field_formatters_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+
+  $field_info = field_info_field($field['field_name']);
+  if ($field_info['type'] == "image") {
+    $image_styles = image_style_options(FALSE);
+
+    $element['image_style'] = array(
+      '#title' => t('Image style'),
+      '#type' => 'select',
+      '#default_value' => $settings['image_style'],
+      '#empty_option' => t('None (original image)'),
+      '#options' => $image_styles,
+    );
+  }
+
+  if ($field_info['type'] == "text" || $field_info['type'] == "text_long" || $field_info['type'] == "text_with_summary") {
+
+    $tags = stanford_field_formatters_get_html_wrapper_tags();
+    $element['html_tag'] = array(
+      '#title' => t('Html wrapper tag'),
+      '#type' => 'select',
+      '#default_value' => $settings['html_tag'],
+      '#empty_option' => t('None'),
+      '#options' => $tags,
+    );
+
+  }
+
+  $element['link_field'] = array(
+    '#title' => t('Choose link field'),
+    '#type' => 'select',
+    '#default_value' => $settings['link_field'],
+    '#empty_option' => t('Nothing'),
+    '#options' => stanford_field_formatters_get_link_fields($instance),
+  );
+
+  return $element;
+
+}
+
+/**
+ * Implements hook_field_formatter_settings_summary().
+ */
+function stanford_field_formatters_field_formatter_settings_summary($field, $instance, $view_mode) {
+  // $display = $instance['display'][$view_mode];
+  $settings = isset($instance['display'][$view_mode]['settings']) ? $instance['display'][$view_mode]['settings'] : $field['formatter_settings'];
+  $link_value = !empty($settings['link_field']) ? $settings['link_field'] : t("Nothing");
+  $image_style = !empty($settings['image_style']) ? $settings['image_style'] : FALSE;
+
+
+  $summary = array();
+  $summary[] = t("Link to field: %field", array('%field' => $link_value));
+  if ($image_style) {
+    $summary[] = t("Image style: %style", array('%style' => $image_style));
+  }
+
+  return implode('<br />', $summary);
+}
+
+
+/**
+ * Implements hook_field_formatter_view().
+ */
+function stanford_field_formatters_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $element = array();
+  $settings = $display['settings'];
+  $link_field = !empty($settings['link_field']) ? $settings['link_field'] : FALSE;
+
+  $paths = array();
+  if ($link_field && !empty($entity->{$link_field}[LANGUAGE_NONE])) {
+    $paths = $entity->{$link_field}[LANGUAGE_NONE];
+  }
+
+  $field_info = field_info_field($field['field_name']);
+
+  switch ($field_info['type']) {
+    case "image":
+      $display['settings']['image_link'] = "file";
+      $element = image_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display);
+      break;
+
+    case "text":
+    case "text_long":
+    case "text_with_summary":
+      $display['type'] = "text_default";
+      $element = text_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display);
+
+      break;
+
+  }
+
+  foreach ($element as $index => $rendr) {
+    if (!empty($paths[$index]) && isset($element[$index]["#path"])) {
+      $element[$index]['#path']['path'] = url($paths[$index]['url']);
+      $element[$index]['#path']['options'] = array();
+    }
+    if (!empty($paths[$index]) && isset($element[$index]["#markup"])) {
+      $element[$index]["#markup"] = l($element[$index]["#markup"], url($paths[$index]['url']), array('html' => TRUE));
+    }
+  }
+
+  return $element;
+}
+
+/**
+ * [stanford_field_formatters_get_html_wrapper_tags description]
+ * @return [type] [description]
+ */
+function stanford_field_formatters_get_html_wrapper_tags() {
+  $tags = array(
+    'h2' => 'H2',
+    'h3' => 'H3',
+    'h4' => 'H4',
+    'h5' => 'H5',
+    'p' => 'p',
+    'span' => 'span',
+  );
+
+  return $tags;
+}
+
+// HOOKS
+// /////////////////////////////////////////////////////////////////////////////
+
+/**
+ * [stanford_field_formatters_ds_fields_info description]
+ * @param  [type] $entity_type [description]
+ * @return [type]              [description]
+ */
+function stanford_field_formatters_ds_fields_info($entity_type) {
+  $fields = array();
+
+  $tags = stanford_field_formatters_get_html_wrapper_tags();
+
+  $fields['title_wrapper'] = array(
+    'title' => t('Title wrapper'),
+    'field_type' => DS_FIELD_TYPE_FUNCTION,
+    'function' => 'stanford_field_formatters_ds_field_title_wrapper',
+    'properties' => array(
+      'formatters' => array(
+        'default' => t('Default'),
+        'stanford_field_formatters' => t('Link to another field'),
+      ),
+      'settings' => array(
+        'link_field' => array(
+          'type' => 'textfield',
+          'description' => t('Eg: field_link'),
+        ),
+        'html_tag' => array(
+          'type' => 'select',
+          'options' => $tags,
+        ),
+      ),
+      'default' => array(
+        'link_field' => '',
+        'html_tag' => '',
+      ),
+    ),
+  );
+  return array('node' => $fields, 'bean' => $fields, 'user' => $fields);
+}
+
+
+/**
+ * Implements hook_field_formatter_settings_form().
+ */
+function stanford_field_formatters_ds_field_settings_form($field) {
+  // Saved formatter settings are on $field['formatter_settings'];
+  $settings = isset($field['formatter_settings']) ? $field['formatter_settings'] : $field['properties']['default'];
+  $instance = array();
+
+  $form = array();
+
+  $tags = stanford_field_formatters_get_html_wrapper_tags();
+
+  $form['html_tag'] = array(
+    '#title' => t('Html wrapper tag'),
+    '#type' => 'select',
+    '#default_value' => $settings['html_tag'],
+    '#empty_option' => t('None'),
+    '#options' => $tags,
+  );
+
+  $form['link_field'] = array(
+    '#title' => t('Choose link field'),
+    '#type' => 'select',
+    '#default_value' => $settings['link_field'],
+    '#empty_option' => t('Nothing'),
+    '#options' => stanford_field_formatters_get_link_fields($field),
+  );
+
+  return $form;
+}
+
+/**
+ * Implements hook_field_formatter_settings_summary().
+ */
+function stanford_field_formatters_ds_field_format_summary($field) {
+  $view_mode = $field['view_mode'];
+  $instance = array();
+  // Gather type information.
+  // $instances = field_info_instances($entity_type, $bundle);
+
+ return stanford_field_formatters_field_formatter_settings_summary($field, $instance, $view_mode);
+}
+
+/**
+ * [stanford_field_formatters_ds_field_title_wrapper description]
+ * @param  [type] $field [description]
+ * @return [type]        [description]
+ */
+function stanford_field_formatters_ds_field_title_wrapper($field) {
+
+  // Get information about the entity being rated and the formatter we're using.
+  $entity = $field['entity'];
+  $output = "";
+  $link_field = !empty($field['formatter_settings']['link_field']) ? $field['formatter_settings']['link_field'] : FALSE;
+  $wrapper = !empty($field['formatter_settings']['html_tag']) ? $field['formatter_settings']['html_tag'] : FALSE;
+
+  // If not available then just return the title.
+  if (!$link_field || empty($link_field)) {
+    $output = $entity->title;
+  }
+  // If there is not a value then return just the title.
+  elseif (empty($entity->{$link_field}[LANGUAGE_NONE][0]['url'])) {
+    $output = $entity->title;
+  }
+  else {
+    $output = l($entity->title, $entity->{$link_field}[LANGUAGE_NONE][0]['url'], array('attributes' => array('class' => array('link-title-field', 'link-field'))));
+  }
+
+  if ($wrapper) {
+    $output = "<" . $wrapper . ">" . $output . "</" . $wrapper . ">";
+  }
+
+
+  return $output;
+
+}
+
+
+// UTIL
+// /////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Returns an array of link fields on an entity type.
+ * @param  [type] $instance [description]
+ * @return [type]           [description]
+ */
+function stanford_field_formatters_get_link_fields($instance) {
+  $fields = array();
+
+  $entity_type = $instance['entity_type'];
+  $bundle = $instance['bundle'];
+  $instances = field_info_instances($entity_type, $bundle);
+
+  foreach ($instances as $field_name => $value) {
+    $field_info = field_info_field($field_name);
+    $type = $field_info['type'];
+    if ($type == "link_field") {
+      $fields[$field_name] = $value['label'] . " [" . $field_name . "]";
+    }
+  }
+
+  return $fields;
+}
