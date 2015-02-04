@@ -88,13 +88,14 @@ function stanford_field_formatters_field_formatter_settings_form($field, $instan
  */
 function stanford_field_formatters_field_formatter_settings_summary($field, $instance, $view_mode) {
   // $display = $instance['display'][$view_mode];
-  $settings = isset($instance['display'][$view_mode]['settings']) ? $instance['display'][$view_mode]['settings'] : $field['formatter_settings'];
+  $settings = isset($instance['display'][$view_mode]['settings']) ? $instance['display'][$view_mode]['settings'] : isset($field['formatter_settings']) ? $field['formatter_settings'] : NULL;
   $link_value = !empty($settings['link_field']) ? $settings['link_field'] : t("Nothing");
   $image_style = !empty($settings['image_style']) ? $settings['image_style'] : FALSE;
 
-
   $summary = array();
+
   $summary[] = t("Link to field: %field", array('%field' => $link_value));
+
   if ($image_style) {
     $summary[] = t("Image style: %style", array('%style' => $image_style));
   }
@@ -201,6 +202,7 @@ function stanford_field_formatters_ds_fields_info($entity_type) {
       ),
     ),
   );
+
   return array('node' => $fields, 'bean' => $fields, 'user' => $fields);
 }
 
@@ -229,12 +231,17 @@ function stanford_field_formatters_ds_fields_info_alter(&$fields, $entity_type) 
  * Implements hook_field_formatter_settings_form().
  */
 function stanford_field_formatters_ds_field_settings_form($field) {
+
+  // Only run on our settings.
+  $formatter = stanford_field_formatters_get_ds_formatter_selection($field);
+  if ($formatter !== "stanford_field_formatters") {
+    return;
+  }
+
   // Saved formatter settings are on $field['formatter_settings'];
   $settings = isset($field['formatter_settings']) ? $field['formatter_settings'] : $field['properties']['default'];
   $instance = array();
-
   $form = array();
-
   $tags = stanford_field_formatters_get_html_wrapper_tags();
 
   $form['html_tag'] = array(
@@ -260,10 +267,43 @@ function stanford_field_formatters_ds_field_settings_form($field) {
  * Implements hook_field_formatter_settings_summary().
  */
 function stanford_field_formatters_ds_field_format_summary($field) {
-  $view_mode = $field['view_mode'];
   $instance = array();
- return stanford_field_formatters_field_formatter_settings_summary($field, $instance, $view_mode);
+  $view_mode = $field['view_mode'];
+  $formatter = stanford_field_formatters_get_ds_formatter_selection($field);
+
+  // If not our formatter do not return anything.
+  if ($formatter !== "stanford_field_formatters") {
+    return;
+  }
+
+  // Return a summary based on our settings.
+  return stanford_field_formatters_field_formatter_settings_summary($field, $instance, $view_mode);
 }
+
+/**
+ * [stanford_field_formatters_get_ds_formatter_selection description]
+ * @param  [type] $field [description]
+ * @return [type]        [description]
+ */
+function stanford_field_formatters_get_ds_formatter_selection($field) {
+
+  $entity_type = $field['entity_type'];
+  $bundle = $field['bundle'];
+  $view_mode = $field['view_mode'];
+  $field_name = isset($field['name']) ? $field['name'] : $field['field_name'];
+
+  $field_info = ds_get_field_settings($entity_type, $bundle, $view_mode);
+  $request_type = isset($_REQUEST['fields'][$field_name]['format']['type']) ? check_plain($_REQUEST['fields'][$field_name]['format']['type']) : FALSE;
+
+  // Handle the change in the form...
+  if (!empty($request_type)) {
+    return $request_type;
+  }
+
+  // Handle the default values.
+  return $field_info[$field_name]['format'];
+}
+
 
 /**
  * [stanford_field_formatters_ds_field_title_wrapper description]
@@ -306,6 +346,14 @@ function stanford_field_formatters_ds_field_title_wrapper($field) {
  */
 function stanford_field_formatters_code_field_override($field) {
   $render = ds_render_code_field($field);
+
+  // Only run on our settings.
+  $formatter = stanford_field_formatters_get_ds_formatter_selection($field);
+  if ($formatter !== "stanford_field_formatters") {
+    return $render;
+  }
+
+  // It is our render field. Carry on.
   $render = strip_tags($render, "<img><span><b><strong><i><em>");
   $entity = $field['entity'];
   $link_field = !empty($field['formatter_settings']['link_field']) ? $field['formatter_settings']['link_field'] : FALSE;
