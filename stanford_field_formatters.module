@@ -37,7 +37,7 @@ function stanford_field_formatters_field_formatter_info() {
     'stanford_link_formatter_link_to_field' => array(
       'label' => t('Link to another field'),
       'field types' => array('title_wrapper', 'image', 'text', 'text_long', 'text_with_summary'),
-      'settings' => array('image_style' => '', 'link_field' => '', 'html_tag' => ''),
+      'settings' => array('image_style' => '', 'link_field' => '', 'html_tag' => '', 'trim_length' => 600),
       'module' => 'stanford_field_formatters',
       'description' => t('Wrap this field with a link from another field.'),
     ),
@@ -66,15 +66,8 @@ function stanford_field_formatters_field_formatter_settings_form($field, $instan
   }
 
   if ($field_info['type'] == "text" || $field_info['type'] == "text_long" || $field_info['type'] == "text_with_summary") {
-
-    $tags = stanford_field_formatters_get_html_wrapper_tags();
-    $element['html_tag'] = array(
-      '#title' => t('Html wrapper tag'),
-      '#type' => 'select',
-      '#default_value' => $settings['html_tag'],
-      '#empty_option' => t('None'),
-      '#options' => $tags,
-    );
+    $instance['display'][$view_mode]['type'] = "text_trimmed";
+    $element = text_field_formatter_settings_form($field, $instance, $view_mode, $form, $form_state);
 
   }
 
@@ -134,9 +127,8 @@ function stanford_field_formatters_field_formatter_view($entity_type, $entity, $
     case "text":
     case "text_long":
     case "text_with_summary":
-      $display['type'] = "text_default";
+      $display['type'] = "text_trimmed";
       $element = text_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display);
-
       break;
 
   }
