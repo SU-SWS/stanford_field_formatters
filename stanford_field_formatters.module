@@ -19,7 +19,7 @@ function stanford_field_formatters_help($path, $arg) {
  */
 function stanford_field_formatters_permission() {
   return array(
-    'administer stanford field formatter' =>  array(
+    'administer stanford field formatter' => array(
       'title' => t('Administer Stanford link field formatter'),
       'description' => t('Apply and change settings'),
     ),
@@ -87,8 +87,17 @@ function stanford_field_formatters_field_formatter_settings_form($field, $instan
  * Implements hook_field_formatter_settings_summary().
  */
 function stanford_field_formatters_field_formatter_settings_summary($field, $instance, $view_mode) {
-  // $display = $instance['display'][$view_mode];
-  $settings = isset($instance['display'][$view_mode]['settings']) ? $instance['display'][$view_mode]['settings'] : isset($field['formatter_settings']) ? $field['formatter_settings'] : NULL;
+
+  $settings = isset($instance['display'][$view_mode]['settings']) ? $instance['display'][$view_mode]['settings'] : NULL;
+
+  if (!$settings) {
+    $settings = isset($field['formatter_settings']) ? $field['formatter_settings'] : NULL;
+  }
+
+  if (!$settings) {
+    return '';
+  }
+
   $link_value = !empty($settings['link_field']) ? $settings['link_field'] : t("Nothing");
   $image_style = !empty($settings['image_style']) ? $settings['image_style'] : FALSE;
 
