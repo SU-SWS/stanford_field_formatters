@@ -318,6 +318,10 @@ function stanford_field_formatters_ds_field_title_wrapper($field) {
   $link_field = !empty($field['formatter_settings']['link_field']) ? $field['formatter_settings']['link_field'] : FALSE;
   $wrapper = !empty($field['formatter_settings']['html_tag']) ? $field['formatter_settings']['html_tag'] : FALSE;
 
+  if (empty($entity->title)) {
+    return;
+  }
+
   // If not available then just return the title.
   if (!$link_field || empty($link_field)) {
     $output = $entity->title;
