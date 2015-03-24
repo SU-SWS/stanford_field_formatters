@@ -95,7 +95,7 @@ function stanford_field_formatters_field_formatter_settings_summary($field, $ins
   }
 
   if (!$settings) {
-    return '';
+    return 'No settings';
   }
 
   $link_value = !empty($settings['link_field']) ? $settings['link_field'] : t("Nothing");
