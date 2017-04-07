@@ -94,6 +94,9 @@ function stanford_field_formatters_field_formatter_settings_form($field, $instan
  * Implements hook_field_formatter_settings_summary().
  */
 function stanford_field_formatters_field_formatter_settings_summary($field, $instance, $view_mode) {
+  if ($field['type'] == 'fontawesome_icon') {
+    return;
+  }
 
   $settings = isset($instance['display'][$view_mode]['settings']) ? $instance['display'][$view_mode]['settings'] : NULL;
 
