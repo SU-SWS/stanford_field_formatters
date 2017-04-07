@@ -1,24 +1,28 @@
 <?php
+
 /**
  * @file
+ * Stanford Field Formatters Install.
  */
 
 /**
- * Implements hook_install().
+ * Implements hook_field_schema().
  */
-function stanford_field_formatters_install() {}
+function stanford_field_formatters_field_schema($field) {
+  $schema = array();
+  switch ($field['type']) {
+    case 'fontawesome_icon':
+      $schema = array(
+        'columns' => array(
+          'icon' => array(
+            'type' => 'varchar',
+            'length' => '255',
+            'not null' => FALSE,
+          ),
+        ),
+      );
+      break;
 
-/**
- * Implements hook_enable().
- */
-function stanford_field_formatters_enable() {}
-
-/**
- * Implements hook_disable().
- */
-function stanford_field_formatters_disable() {}
-
-/**
- * Implements hook_uninstall().
- */
-function stanford_field_formatters_uninstall() {}
+  }
+  return $schema;
+}
