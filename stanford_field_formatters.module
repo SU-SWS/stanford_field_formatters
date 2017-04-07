@@ -165,7 +165,7 @@ function stanford_field_formatters_field_formatter_view($entity_type, $entity, $
             '#attached' => array(
               'css' => array(
                 drupal_get_path('module', 'stanford_field_formatters') . '/css/fontawesome/stanford_fa.css',
-                drupal_get_path('module', 'stanford_field_formatters') . '/css/stanford_icon_grid.css',
+                drupal_get_path('module', 'stanford_field_formatters') . '/css/stanford_field_formatters.css',
               ),
             ),
           );
@@ -493,7 +493,7 @@ function stanford_field_formatters_field_widget_form(&$form, &$form_state, $fiel
         drupal_get_path('module', 'stanford_field_formatters') . '/css/fontawesome/stanford_fa.css',
       ),
       'js' => array(
-        drupal_get_path('module', 'stanford_field_formatters') . '/js/stanford_icon_grid.js',
+        drupal_get_path('module', 'stanford_field_formatters') . '/js/stanford_field_formatters.js',
       ),
     ),
     '#default_value' => $items[$delta]['icon'],
@@ -509,13 +509,13 @@ function stanford_field_formatters_field_widget_form(&$form, &$form_state, $fiel
  */
 function stanford_field_formatters_get_icons() {
   // If data is cached, return the data.
-  if ($cache = cache_get('stanford_icon_grid_icons')) {
+  if ($cache = cache_get('stanford_field_formatters_icons')) {
     return $cache->data;
   }
 
   // Get json data and set cache.
   $fa_icons = drupal_get_path('module', 'stanford_field_formatters') . '/css/font-awesome.json';
   $fa_icons = drupal_json_decode(file_get_contents($fa_icons));
-  cache_set('stanford_icon_grid_icons', $fa_icons);
+  cache_set('stanford_field_formatters_icons', $fa_icons);
   return $fa_icons;
 }
