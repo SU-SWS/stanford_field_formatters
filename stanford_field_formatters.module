@@ -180,20 +180,19 @@ function _stanford_field_formatters_field_formatter_view_paths(array &$element, 
   foreach (array_keys($element) as $index) {
     if (!empty($paths[$index])) {
 
+      $attributes = $paths[$index]['attributes'];
+      $attributes['title'] = $paths[$index]['title'];
+
       if (isset($element[$index]["#path"])) {
         $element[$index]['#path']['path'] = url($paths[$index]['url']);
-        $element[$index]['#path']['options'] = array();
+        $element[$index]['#path']['options'] = $attributes;
       }
 
       if (isset($element[$index]["#markup"])) {
-
-        $attributes = $paths[$index]['attributes'];
-        $attributes['title'] = $paths[$index]['title'];
         $link_options = array(
           'html' => TRUE,
           'attributes' => $attributes,
         );
-
         $element[$index]["#markup"] = l($element[$index]["#markup"], url($paths[$index]['url']), $link_options);
       }
     }
@@ -207,21 +206,14 @@ function stanford_field_formatters_font_awesome_view($entity_type, $entity, $fie
   $element = array();
   foreach ($items as $delta => $item) {
     if (isset($item['icon'])) {
-      $tag = array(
-        'element' => array(
-          '#tag' => 'i',
-          '#value' => '',
-          '#attributes' => array(
-            'class' => array('fa', 'fa-' . $item['icon']),
-            'aria-hidden' => array("true"),
-          ),
-        ),
-      );
-
       // Builds font awesome tag <i class="fa fa-{value}"
       // aria-hidden="true"/>.
       $element[$delta] = array(
-        '#markup' => theme('html_tag', $tag),
+        '#theme' => 'font_awesome_icon',
+        '#path' => array(),
+        '#tag' => 'i',
+        '#value' => '',
+        '#attributes' => array('class' => array('fa', 'fa-' . $item['icon'])),
         '#attached' => array(
           'css' => array(
             drupal_get_path('module', 'stanford_field_formatters') . '/css/fontawesome/stanford_fa.css',
@@ -232,6 +224,39 @@ function stanford_field_formatters_font_awesome_view($entity_type, $entity, $fie
     }
   }
   return $element;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function stanford_field_formatters_theme($existing, $type, $theme, $path) {
+  return array(
+    'font_awesome_icon' => array(
+      'render element' => 'element',
+    ),
+  );
+}
+
+/**
+ * Theme font awesome icons.
+ *
+ * @param array $variables
+ *   Theme variables similar to theme_html_tag().
+ *
+ * @return string
+ *   Render output.
+ */
+function theme_font_awesome_icon(array $variables) {
+  $output = theme('html_tag', $variables);
+
+  if (!empty($variables['element']['#path'])) {
+    $link = array(
+      'html' => TRUE,
+      'attributes' => $variables['element']['#path']['options'],
+    );
+    $output = l($output, $variables['element']['#path']['path'], $link);
+  }
+  return $output;
 }
 
 /**
