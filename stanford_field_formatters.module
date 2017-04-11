@@ -127,14 +127,6 @@ function stanford_field_formatters_field_formatter_settings_summary($field, $ins
  */
 function stanford_field_formatters_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
   $element = array();
-  $settings = $display['settings'];
-  $link_field = !empty($settings['link_field']) ? $settings['link_field'] : FALSE;
-
-  $paths = array();
-  if ($link_field && !empty($entity->{$link_field}[LANGUAGE_NONE])) {
-    $paths = $entity->{$link_field}[LANGUAGE_NONE];
-  }
-
   $field_info = field_info_field($field['field_name']);
 
   switch ($field_info['type']) {
@@ -177,6 +169,30 @@ function stanford_field_formatters_field_formatter_view($entity_type, $entity, $
       break;
   }
 
+  _stanford_field_formatters_field_formatter_view_paths($element, $entity, $display);
+  return $element;
+}
+
+/**
+ * Apply link to formatter markup.
+ *
+ * @param array $element
+ *   The element to manipulate.
+ * @param object $entity
+ *   The entity object.
+ * @param array $display
+ *   The field display settings.
+ */
+function _stanford_field_formatters_field_formatter_view_paths(array &$element, $entity, array $display) {
+  $settings = $display['settings'];
+  $link_field = !empty($settings['link_field']) ? $settings['link_field'] : FALSE;
+
+  $paths = array();
+  if ($link_field && !empty($entity->{$link_field}[LANGUAGE_NONE])) {
+    $link_field_items = $entity->$link_field;
+    $paths = $link_field_items[LANGUAGE_NONE];
+  }
+
   foreach (array_keys($element) as $index) {
     if (!empty($paths[$index]) && isset($element[$index]["#path"])) {
       $element[$index]['#path']['path'] = url($paths[$index]['url']);
@@ -186,8 +202,6 @@ function stanford_field_formatters_field_formatter_view($entity_type, $entity, $
       $element[$index]["#markup"] = l($element[$index]["#markup"], url($paths[$index]['url']), array('html' => TRUE));
     }
   }
-
-  return $element;
 }
 
 /**
