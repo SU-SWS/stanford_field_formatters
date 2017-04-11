@@ -45,8 +45,15 @@ function stanford_field_formatters_field_formatter_info() {
       'description' => t('Wrap this field with a link from another field.'),
     ),
     'fontawesome_icon_formatter' => array(
-      'label' => t('Font Awesome Icons'),
+      'label' => t('Icons'),
       'field types' => array('fontawesome_icon'),
+    ),
+    'fontawesome_icon_link' => array(
+      'label' => t('Linked Icons'),
+      'field types' => array('fontawesome_icon'),
+      'settings' => array(
+        'link_field' => '',
+      ),
     ),
   );
   return $formatters;
@@ -94,7 +101,7 @@ function stanford_field_formatters_field_formatter_settings_form($field, $instan
  * Implements hook_field_formatter_settings_summary().
  */
 function stanford_field_formatters_field_formatter_settings_summary($field, $instance, $view_mode) {
-  if ($field['type'] == 'fontawesome_icon') {
+  if ($instance['display'][$view_mode]['type'] == 'fontawesome_icon_formatter') {
     return;
   }
 
@@ -127,9 +134,8 @@ function stanford_field_formatters_field_formatter_settings_summary($field, $ins
  */
 function stanford_field_formatters_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
   $element = array();
-  $field_info = field_info_field($field['field_name']);
 
-  switch ($field_info['type']) {
+  switch ($field['type']) {
     case "image":
       $display['settings']['image_link'] = "file";
       $element = image_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display);
@@ -143,29 +149,7 @@ function stanford_field_formatters_field_formatter_view($entity_type, $entity, $
       break;
 
     case "fontawesome_icon":
-
-      foreach ($items as $delta => $item) {
-        if (isset($item['icon'])) {
-
-          // Builds font awesome tag <i class="fa fa-{value}"
-          // aria-hidden="true"/>.
-          $element[$delta] = array(
-            '#theme' => 'html_tag',
-            '#tag' => 'i',
-            '#value' => '',
-            '#attributes' => array(
-              'class' => array('fa', 'fa-' . $item['icon']),
-              'aria-hidden' => array("true"),
-            ),
-            '#attached' => array(
-              'css' => array(
-                drupal_get_path('module', 'stanford_field_formatters') . '/css/fontawesome/stanford_fa.css',
-                drupal_get_path('module', 'stanford_field_formatters') . '/css/stanford_field_formatters.css',
-              ),
-            ),
-          );
-        }
-      }
+      $element = stanford_field_formatters_font_awesome_view($entity_type, $entity, $field, $instance, $langcode, $items, $display);
       break;
   }
 
@@ -194,14 +178,60 @@ function _stanford_field_formatters_field_formatter_view_paths(array &$element, 
   }
 
   foreach (array_keys($element) as $index) {
-    if (!empty($paths[$index]) && isset($element[$index]["#path"])) {
-      $element[$index]['#path']['path'] = url($paths[$index]['url']);
-      $element[$index]['#path']['options'] = array();
-    }
-    if (!empty($paths[$index]) && isset($element[$index]["#markup"])) {
-      $element[$index]["#markup"] = l($element[$index]["#markup"], url($paths[$index]['url']), array('html' => TRUE));
+    if (!empty($paths[$index])) {
+
+      if (isset($element[$index]["#path"])) {
+        $element[$index]['#path']['path'] = url($paths[$index]['url']);
+        $element[$index]['#path']['options'] = array();
+      }
+
+      if (isset($element[$index]["#markup"])) {
+
+        $attributes = $paths[$index]['attributes'];
+        $attributes['title'] = $paths[$index]['title'];
+        $link_options = array(
+          'html' => TRUE,
+          'attributes' => $attributes,
+        );
+
+        $element[$index]["#markup"] = l($element[$index]["#markup"], url($paths[$index]['url']), $link_options);
+      }
     }
   }
+}
+
+/**
+ * Build the render array for the font awesome icon field display.
+ */
+function stanford_field_formatters_font_awesome_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $element = array();
+  foreach ($items as $delta => $item) {
+    if (isset($item['icon'])) {
+      $tag = array(
+        'element' => array(
+          '#tag' => 'i',
+          '#value' => '',
+          '#attributes' => array(
+            'class' => array('fa', 'fa-' . $item['icon']),
+            'aria-hidden' => array("true"),
+          ),
+        ),
+      );
+
+      // Builds font awesome tag <i class="fa fa-{value}"
+      // aria-hidden="true"/>.
+      $element[$delta] = array(
+        '#markup' => theme('html_tag', $tag),
+        '#attached' => array(
+          'css' => array(
+            drupal_get_path('module', 'stanford_field_formatters') . '/css/fontawesome/stanford_fa.css',
+            drupal_get_path('module', 'stanford_field_formatters') . '/css/stanford_field_formatters.css',
+          ),
+        ),
+      );
+    }
+  }
+  return $element;
 }
 
 /**
