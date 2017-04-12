@@ -556,16 +556,18 @@ function stanford_field_formatters_field_widget_info() {
  * Implements hook_field_widget_form().
  */
 function stanford_field_formatters_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
+  $path = drupal_get_path('module', 'stanford_field_formatters');
   $icon = array(
     '#type' => 'select',
     '#options' => stanford_field_formatters_get_icons(),
     '#attributes' => array('class' => array('stanford-fontawesome-icon')),
     '#attached' => array(
       'css' => array(
-        drupal_get_path('module', 'stanford_field_formatters') . '/css/fontawesome/stanford_fa.css',
+        "$path/css/fontawesome/stanford_fa.css",
+        "$path/css/stanford_field_formatters.admin.css",
       ),
       'js' => array(
-        drupal_get_path('module', 'stanford_field_formatters') . '/js/stanford_field_formatters.js',
+        "$path/js/stanford_field_formatters.js",
       ),
     ),
     '#default_value' => $items[$delta]['icon'],
