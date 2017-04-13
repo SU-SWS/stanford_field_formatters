@@ -247,14 +247,19 @@ function stanford_field_formatters_theme($existing, $type, $theme, $path) {
  *   Render output.
  */
 function theme_font_awesome_icon(array $variables) {
-  $output = theme('html_tag', $variables);
-
   if (!empty($variables['element']['#path'])) {
     $link = array(
       'html' => TRUE,
       'attributes' => $variables['element']['#path']['options'],
     );
-    $output = l($output, $variables['element']['#path']['path'], $link);
+    if (isset($link['attributes']['title'])) {
+      $variables['element']['#value'] = '<span class="visually-hidden">' . $link['attributes']['title'] . '</span>';
+    }
+    $tag = theme('html_tag', $variables);
+    $output = l($tag, $variables['element']['#path']['path'], $link);
+  }
+  else {
+    $output = theme('html_tag', $variables);
   }
   return $output;
 }
