@@ -216,13 +216,13 @@ function stanford_field_formatters_font_awesome_view($entity_type, $entity, $fie
         '#attributes' => array('class' => array('fa', 'fa-' . $item['icon'])),
         '#attached' => array(
           'css' => array(
-            '//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css',
             drupal_get_path('module', 'stanford_field_formatters') . '/css/stanford_field_formatters.css',
           ),
         ),
       );
     }
   }
+  stanford_field_formatters_load_fontawesome();
   return $element;
 }
 
@@ -568,7 +568,6 @@ function stanford_field_formatters_field_widget_form(&$form, &$form_state, $fiel
     '#attributes' => array('class' => array('stanford-fontawesome-icon')),
     '#attached' => array(
       'css' => array(
-        '//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css',
         "$path/css/stanford_field_formatters.admin.css",
       ),
       'js' => array(
@@ -577,6 +576,7 @@ function stanford_field_formatters_field_widget_form(&$form, &$form_state, $fiel
     ),
     '#default_value' => $items[$delta]['icon'],
   );
+  stanford_field_formatters_load_fontawesome();
   return array('icon' => $element + $icon);
 }
 
@@ -597,4 +597,16 @@ function stanford_field_formatters_get_icons() {
   $fa_icons = drupal_json_decode(file_get_contents($fa_icons));
   cache_set('stanford_field_formatters_icons', $fa_icons);
   return $fa_icons;
+}
+
+/**
+ * Load font awesome 4.7.0 library.
+ */
+function stanford_field_formatters_load_fontawesome(){
+  $file = &drupal_static(__FUNCTION__);
+  if($file){
+    return;
+  }
+  $file = 'https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css';
+  drupal_add_css($file, array('type' => 'external'));
 }
