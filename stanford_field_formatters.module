@@ -17,6 +17,8 @@ function stanford_field_formatters_permission() {
   );
 }
 
+
+
 /**
  * Implements hook_field_formatter_info().
  *
@@ -537,6 +539,7 @@ function stanford_field_formatters_field_info() {
       'description' => t('This field stores varchar text in the database.'),
       'default_widget' => 'fontawesome_icon_widget',
       'default_formatter' => 'fontawesome_icon_formatter',
+      'settings' => array('subset' => NULL),
     ),
   );
 }
@@ -558,13 +561,42 @@ function stanford_field_formatters_field_widget_info() {
 }
 
 /**
+ * Implements hook_field_widget_settings_form().
+ */
+function stanford_field_formatters_field_widget_settings_form($field, $instance) {
+  $widget = $instance['widget'];
+  $settings = $widget['settings'];
+
+  $options = array(0 => 'All Sets');
+  $fa_icons = stanford_field_formatters_get_icons();
+  foreach ($fa_icons as $set => $set_icons) {
+    $options[$set] = str_replace(' Icons', '', $set);
+  }
+  $form['subset'] = array(
+    '#type' => 'select',
+    '#title' => t('FontAwesome Subset'),
+    '#options' => $options,
+    '#default_value' => $settings['subset'],
+  );
+  return $form;
+}
+
+/**
  * Implements hook_field_widget_form().
  */
 function stanford_field_formatters_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
   $path = drupal_get_path('module', 'stanford_field_formatters');
+
+  $fa_icons = stanford_field_formatters_get_icons();
+
+  // Get the subset of icons if set.
+  if ($subset = $instance['widget']['settings']['subset']) {
+    $fa_icons = array($subset => $fa_icons[$subset]);
+  }
+
   $icon = array(
     '#type' => 'select',
-    '#options' => stanford_field_formatters_get_icons(),
+    '#options' => $fa_icons,
     '#attributes' => array('class' => array('stanford-fontawesome-icon')),
     '#attached' => array(
       'css' => array(
@@ -602,9 +634,9 @@ function stanford_field_formatters_get_icons() {
 /**
  * Load font awesome 4.7.0 library.
  */
-function stanford_field_formatters_load_fontawesome(){
+function stanford_field_formatters_load_fontawesome() {
   $file = &drupal_static(__FUNCTION__);
-  if($file){
+  if ($file) {
     return;
   }
   $file = 'https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css';
