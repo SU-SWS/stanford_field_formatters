@@ -566,7 +566,7 @@ function stanford_field_formatters_field_widget_settings_form($field, $instance)
   $widget = $instance['widget'];
   $settings = $widget['settings'];
 
-  $options = array(0 => 'All Sets');
+  $options = array();
   $fa_icons = stanford_field_formatters_get_icons();
   foreach ($fa_icons as $set => $set_icons) {
     $options[$set] = str_replace(' Icons', '', $set);
@@ -574,6 +574,7 @@ function stanford_field_formatters_field_widget_settings_form($field, $instance)
   $form['subset'] = array(
     '#type' => 'select',
     '#title' => t('FontAwesome Subset'),
+    '#description' => t('Leave empty to allow all'),
     '#options' => $options,
     '#default_value' => $settings['subset'],
     '#multiple' => TRUE,
@@ -592,16 +593,19 @@ function stanford_field_formatters_field_widget_form(&$form, &$form_state, $fiel
   // Get the subset of icons if set.
   if (isset($instance['widget']['settings']['subset'])) {
     $subsets = $instance['widget']['settings']['subset'];
-    if (is_string($subsets)) {
-      $fa_icons = $fa_icons[$subsets];
-    }
-    else {
-      $limited_icons = array();
-      foreach ($subsets as $set) {
-        $limited_icons[$set] = $fa_icons[$set];
-      }
 
-      $fa_icons = $limited_icons;
+    if ($subsets) {
+      if (is_string($subsets)) {
+        $fa_icons = $fa_icons[$subsets];
+      }
+      else {
+        $limited_icons = array();
+        foreach ($subsets as $set) {
+          $limited_icons[$set] = $fa_icons[$set];
+        }
+
+        $fa_icons = $limited_icons;
+      }
     }
   }
 
