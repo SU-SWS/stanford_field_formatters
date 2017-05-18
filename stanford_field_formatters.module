@@ -18,7 +18,6 @@ function stanford_field_formatters_permission() {
 }
 
 
-
 /**
  * Implements hook_field_formatter_info().
  *
@@ -539,7 +538,7 @@ function stanford_field_formatters_field_info() {
       'description' => t('This field stores varchar text in the database.'),
       'default_widget' => 'fontawesome_icon_widget',
       'default_formatter' => 'fontawesome_icon_formatter',
-      'settings' => array('subset' => NULL),
+      'settings' => array('subset' => array()),
     ),
   );
 }
@@ -577,6 +576,7 @@ function stanford_field_formatters_field_widget_settings_form($field, $instance)
     '#title' => t('FontAwesome Subset'),
     '#options' => $options,
     '#default_value' => $settings['subset'],
+    '#multiple' => TRUE,
   );
   return $form;
 }
@@ -590,8 +590,19 @@ function stanford_field_formatters_field_widget_form(&$form, &$form_state, $fiel
   $fa_icons = stanford_field_formatters_get_icons();
 
   // Get the subset of icons if set.
-  if ($subset = $instance['widget']['settings']['subset']) {
-    $fa_icons = array($subset => $fa_icons[$subset]);
+  if (isset($instance['widget']['settings']['subset'])) {
+    $subsets = $instance['widget']['settings']['subset'];
+    if (is_string($subsets)) {
+      $fa_icons = $fa_icons[$subsets];
+    }
+    else {
+      $limited_icons = array();
+      foreach ($subsets as $set) {
+        $limited_icons[$set] = $fa_icons[$set];
+      }
+
+      $fa_icons = $limited_icons;
+    }
   }
 
   $icon = array(
