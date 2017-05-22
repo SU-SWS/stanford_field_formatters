@@ -1,9 +1,10 @@
 # [Stanford Field Formatters](https://github.com/SU-SWS/stanford_field_formatters)
-##### Version: 7.x-1.0
+##### Version: 7.x-1.1
 
-Maintainers: [jbickar](https://github.com/jbickar), [sherakama](https://github.com/sherakama)
+Maintainers: [jbickar](https://github.com/jbickar), [sherakama](https://github.com/sherakama), [pookmish](https://github.com/pookmish)
 
 Provides the ability to wrap a link around any field with a link field attached to the same entity.
+Gives a font awesome field type that uses FontAwesome 4.6.1 icons in a rendered field.
 
 
 Installation
@@ -14,7 +15,8 @@ Install this module like any other module. [See Drupal Documentation](https://dr
 Configuration
 ---
 
-Description here: [needs description]
+Configure the fields on an entity to use the FontAwesome field. Simple choose "FontAwesome Icon" from the list of available field types. [See Drupal Documentation](https://www.drupal.org/docs/7/nodes-content-types-and-fields/add-a-field-to-a-content-type) for more information.
+To use the links around a field, edit the display settings of the field and choose which link field to use as reference for the configuring field. [See Drupal Documenation](https://www.drupal.org/node/1577708) for more information.
 
 Troubleshooting
 ---
