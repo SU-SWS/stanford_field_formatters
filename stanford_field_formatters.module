@@ -17,7 +17,6 @@ function stanford_field_formatters_permission() {
   );
 }
 
-
 /**
  * Implements hook_field_formatter_info().
  *
@@ -566,19 +565,26 @@ function stanford_field_formatters_field_widget_settings_form($field, $instance)
   $widget = $instance['widget'];
   $settings = $widget['settings'];
 
-  $options = array();
-  $fa_icons = stanford_field_formatters_get_icons();
-  foreach ($fa_icons as $set => $set_icons) {
-    $options[$set] = str_replace(' Icons', '', $set);
+  $form = array();
+
+  switch ($widget['type']) {
+    case 'fontawesome_icon_widget':
+      $options = array();
+      $fa_icons = stanford_field_formatters_get_icons();
+      foreach ($fa_icons as $set => $set_icons) {
+        $options[$set] = str_replace(' Icons', '', $set);
+      }
+      $form['subset'] = array(
+        '#type' => 'select',
+        '#title' => t('FontAwesome Subset'),
+        '#description' => t('Leave empty to allow all'),
+        '#options' => $options,
+        '#default_value' => $settings['subset'],
+        '#multiple' => TRUE,
+      );
+      break;
   }
-  $form['subset'] = array(
-    '#type' => 'select',
-    '#title' => t('FontAwesome Subset'),
-    '#description' => t('Leave empty to allow all'),
-    '#options' => $options,
-    '#default_value' => $settings['subset'],
-    '#multiple' => TRUE,
-  );
+
   return $form;
 }
 
@@ -586,6 +592,21 @@ function stanford_field_formatters_field_widget_settings_form($field, $instance)
  * Implements hook_field_widget_form().
  */
 function stanford_field_formatters_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
+  $widget = $instance['widget'];
+  switch ($widget['type']) {
+    case 'fontawesome_icon_widget':
+      return _stanford_field_formatters_fontawesome_icon_widget_form($form, $form_state, $field, $instance, $langcode, $items, $delta, $element);
+      break;
+  }
+  return array();
+}
+
+/**
+ * Fontawesome icon Widget form.
+ *
+ * @see stanford_field_formatters_field_widget_form()
+ */
+function _stanford_field_formatters_fontawesome_icon_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
   $path = drupal_get_path('module', 'stanford_field_formatters');
 
   $fa_icons = stanford_field_formatters_get_icons();
