@@ -608,8 +608,11 @@ function stanford_field_formatters_field_widget_form(&$form, &$form_state, $fiel
  */
 function _stanford_field_formatters_fontawesome_icon_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
   $path = drupal_get_path('module', 'stanford_field_formatters');
-
-  $fa_icons = stanford_field_formatters_get_icons();
+  $fa_icons = array();
+  if (!$instance['required']) {
+    $fa_icons[0] = '- None -';
+  }
+  $fa_icons += stanford_field_formatters_get_icons();
 
   // Get the subset of icons if set.
   if (isset($instance['widget']['settings']['subset'])) {
@@ -646,6 +649,23 @@ function _stanford_field_formatters_fontawesome_icon_widget_form(&$form, &$form_
   );
   stanford_field_formatters_load_fontawesome();
   return array('icon' => $element + $icon);
+}
+
+/**
+ * Implements hook_field_presave().
+ */
+function stanford_field_formatters_field_presave($entity_type, $entity, $field, $instance, $langcode, &$items) {
+  $reset_deltas = FALSE;
+  foreach ($items as $delta => $value) {
+    if (isset($value['icon']) && $value['icon'] == '0') {
+      unset($items[$delta]);
+      $reset_deltas = TRUE;
+    }
+  }
+  // Reset deltas.
+  if ($reset_deltas) {
+    $items = array_values($items);
+  }
 }
 
 /**
