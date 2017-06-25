@@ -609,9 +609,6 @@ function stanford_field_formatters_field_widget_form(&$form, &$form_state, $fiel
 function _stanford_field_formatters_fontawesome_icon_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
   $path = drupal_get_path('module', 'stanford_field_formatters');
   $fa_icons = array();
-  if (!$instance['required']) {
-    $fa_icons[0] = '- None -';
-  }
   $fa_icons += stanford_field_formatters_get_icons();
 
   // Get the subset of icons if set.
@@ -636,6 +633,7 @@ function _stanford_field_formatters_fontawesome_icon_widget_form(&$form, &$form_
   $icon = array(
     '#type' => 'select',
     '#options' => $fa_icons,
+    '#empty_option' => t('- None -'),
     '#attributes' => array('class' => array('stanford-fontawesome-icon')),
     '#attached' => array(
       'css' => array(
