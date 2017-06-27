@@ -643,7 +643,7 @@ function _stanford_field_formatters_fontawesome_icon_widget_form(&$form, &$form_
         "$path/js/stanford_field_formatters.js",
       ),
     ),
-    '#default_value' => $items[$delta]['icon'],
+    '#defaut_value' => t('- None -'),
   );
   stanford_field_formatters_load_fontawesome();
   return array('icon' => $element + $icon);
