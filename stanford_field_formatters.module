@@ -216,7 +216,7 @@ function stanford_field_formatters_font_awesome_view($entity_type, $entity, $fie
         '#attributes' => array('class' => array('fa', 'fa-' . $item['icon'])),
         '#attached' => array(
           'css' => array(
-            drupal_get_path('module', 'stanford_field_formatters') . '/css/stanford_field_formatters.css',
+            drupal_get_path('module', 'stanford_field_formatters') . '/css/stanford_field_formatters.admin.css',
           ),
         ),
       );
