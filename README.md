@@ -1,7 +1,6 @@
 # [Stanford Field Formatters](https://github.com/SU-SWS/stanford_field_formatters)
-##### Version: 7.x-1.1
 
-Maintainers: [jbickar](https://github.com/jbickar), [sherakama](https://github.com/sherakama), [pookmish](https://github.com/pookmish)
+Maintainers: [jbickar](https://github.com/jbickar), [sherakama](https://github.com/sherakama), [pookmish](https://github.com/pookmish), [boznik](https://github.com/boznik)
 
 Provides the ability to wrap a link around any field with a link field attached to the same entity.
 Gives a font awesome field type that uses FontAwesome 4.6.1 icons in a rendered field.
