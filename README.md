@@ -1,4 +1,5 @@
 # [Stanford Field Formatters](https://github.com/SU-SWS/stanford_field_formatters)
+##### Version: 7.x-1.x-dev
 
 Maintainers: [jbickar](https://github.com/jbickar), [sherakama](https://github.com/sherakama), [pookmish](https://github.com/pookmish), [boznik](https://github.com/boznik)
 
